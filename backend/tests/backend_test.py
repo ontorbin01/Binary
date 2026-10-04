@@ -22,7 +22,7 @@ class TestReels:
         assert r.status_code == 200
         data = r.json()
         assert isinstance(data, list)
-        assert len(data) == 6
+        assert len(data) >= 6
         for reel in data:
             assert reel["status"] == "approved"
             assert "seller" in reel and reel["seller"] is not None

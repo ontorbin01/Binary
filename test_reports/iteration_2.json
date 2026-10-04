@@ -1,0 +1,29 @@
+{
+  "summary": "Iteration 2 both-track testing complete. Backend: 11 new iteration-2 pytest cases pass (seller role login creates seller profile + seller_id, buyer role login returns seller_id null, GET /api/users/{phone}, seller reel upload with default poster/video + visible in feed and seller inventory, order placed on seller's reel shows in /api/seller/{sid}/orders, wallet deposit pending flow, admin deposits list, metrics.pending_deposits, approve credits user wallet via $inc, double-approve is idempotent, reject does not credit). Full regression suite: 34/34 pass (fixed outdated `len==6` reels assertion to `>=6` since seeded uploads now add reels). Frontend: role toggle in LoginModal works (role-buyer-btn / role-seller-btn), seller fields (login-district-select / login-village-input) appear conditionally. Seller login lands on SellerDashboard with all 4 tabs; upload flow creates product that immediately appears in inventory. Buyer login shows profile with wallet tab; wallet-deposit-section renders with method selector (bkash shows admin number 01700-123456), amount/sender/trxid inputs; submit shows success toast and the deposit appears in history. Admin panel is NOT reachable from home (home-admin-btn=0) or sidebars (admin-dashboard-link=0); /admin-secret-portal shows password gate; login with admin/Rumpaontu15@ reveals Deposits tab; approving pending deposit succeeds with success toast. BottomNav renders as single instance (previous duplicate testid bug fixed).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iteration2.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py `deposit_action` approve path guards on status=='pending' (good; idempotent). Reject path has no such guard — a rejected deposit can be flipped repeatedly between rejected and approved via /action; approve on a previously-rejected deposit will NOT credit (requires status=='pending') so no double-credit risk, but the state machine is loose. Consider restricting transitions.",
+    "server.py imports `List` but no longer uses it; minor unused import.",
+    "No auth/authorization on /api/admin/* endpoints (only /api/admin/login returns a static token; no middleware verifies it). All admin endpoints are open to anyone who knows the URL. Acceptable for MVP but should be flagged.",
+    "/api/reels POST has no auth either — anyone can post reels for any seller_id. For MVP where sellers mock-login this is by design but worth noting.",
+    "Login creates a brand-new seller profile every time a new phone registers with role=seller, even if the chosen name/village is garbage. Fine for mock login MVP."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_iteration2.py"
+  ],
+  "success_rate": {"backend": "100% (34/34)", "frontend": "100% on new flows tested"},
+  "test_credentials": "Admin admin/Rumpaontu15@ at /admin-secret-portal ; Buyer any name+phone (seeded 01711000001) ; Seller any name+phone+district+village",
+  "seed_data_creation": "Tests create TEST_ prefixed users/sellers/reels/deposits via mock login; no cleanup needed per MVP conventions.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests split into /app/backend/tests/backend_test.py (iteration-1 regressions, 23 cases) and /app/backend/tests/test_iteration2.py (iteration-2 features, 11 cases). All pass. Frontend new testids verified: role-buyer-btn, role-seller-btn, login-district-select, login-village-input, login-submit-btn, seller-tab-{upload,inventory,orders,wallet}, upload-{title,price}-input, upload-category-select, upload-type-{nonperishable,perishable}, upload-submit-btn, profile-tab-{orders,wallet}, wallet-deposit-section, deposit-method-{bkash,nagad,rocket}, deposit-admin-number, deposit-amount-input, deposit-sender-input, deposit-trxid-input, deposit-submit-btn, admin-username-input, admin-password-input, admin-login-btn, admin-tab-deposits, deposit-approve-{id}, deposit-reject-{id}. Admin portal is at route /admin-secret-portal and the admin entry point is removed from HomeView/sidebars (verified home-admin-btn and admin-dashboard-link counts = 0).",
+  "rca of the issue": "N/A — no bugs found in this iteration."
+}

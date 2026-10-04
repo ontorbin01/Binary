@@ -28,13 +28,14 @@ Video-first (Reels/Shorts style) e-commerce marketplace connecting rural Banglad
 - Bangla privacy policy + escrow terms.
 
 ## Implemented (2026-06)
-- All backend endpoints (23 pytest cases passing 100%).
-- Dual-view responsive shell, reels feed, comment drawer, seller modal, 3-step checkout, admin dashboard (5 tabs), home/categories/cart/profile views, login & legal modals.
-- Verified end-to-end via testing agent (backend 100%, frontend ~95%).
+- All backend endpoints (iteration 1: 23 pytest cases; iteration 2: 11 cases — all passing 100%).
+- Dual-view responsive shell (single-Screen responsive layout), reels feed, comment drawer, seller modal, 3-step checkout, admin dashboard, home/categories/cart/profile views, login & legal modals.
+- Iteration 2: Buyer/Seller role separation at login; dedicated Seller Dashboard (product/reel upload with location tags, inventory, incoming orders, wallet); Admin panel removed from all public views and moved to secret route `/admin-secret-portal` (password gated); Wallet Deposit / Add Money (dynamic admin bKash/Nagad/Rocket numbers + TrxID + sender number) with admin verification tab that credits wallet on approval.
+- Verified end-to-end via testing agent (backend 100% 34/34, frontend 100% on new flows).
 
-## Known Minor Items (non-blocking, LOW)
-- BottomNav exists in both mobile & desktop DOM trees (one hidden via CSS) — Playwright strict-locator collisions only, no user impact.
-- Reel action buttons report 0x0 to Playwright (icon paint timing) — real clicks work.
+## Known Minor Items (non-blocking)
+- No auth middleware on /api/admin/* and POST /api/reels (mock-login MVP by design).
+- Deposit state machine is loose (reject↔approve) but no double-credit (approve requires status=pending).
 
 ## Backlog
 - P1: Seller-side upload/dashboard to post own reels; real notification of order status changes.
