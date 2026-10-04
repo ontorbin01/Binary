@@ -34,12 +34,29 @@ def new_id():
 
 
 # ---------------- Models ----------------
-class LoginInput(BaseModel):
-    name: str
+class AuthInput(BaseModel):
+    name: Optional[str] = ""
     phone: str
     role: str = "buyer"
     district: Optional[str] = ""
     village: Optional[str] = ""
+    avatar: Optional[str] = ""
+
+
+class ProfileInput(BaseModel):
+    phone: str
+    name: Optional[str] = None
+    avatar: Optional[str] = None
+    district: Optional[str] = None
+    village: Optional[str] = None
+
+
+class WithdrawInput(BaseModel):
+    phone: str
+    user_name: str
+    method: str  # bkash | nagad | rocket
+    number: str
+    amount: float
 
 
 class ReelInput(BaseModel):
@@ -250,30 +267,62 @@ async def root():
     return {"message": "GramerGhor BD API"}
 
 
+def yt_thumb(url):
+    import re
+    m = re.search(r"(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([\w-]{11})", url or "")
+    return f"https://img.youtube.com/vi/{m.group(1)}/hqdefault.jpg" if m else None
+
+
+@api_router.post("/auth/register")
+async def register(data: AuthInput):
+    existing = await db.users.find_one({"phone": data.phone}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=409, detail="এই নম্বরটি আগে থেকেই নিবন্ধিত। অনুগ্রহ করে লগইন করুন।")
+    if not data.name:
+        raise HTTPException(status_code=400, detail="নাম আবশ্যক")
+    user = {"id": new_id(), "name": data.name, "phone": data.phone, "role": data.role,
+            "wallet": 0, "banned": False, "flagged": False, "avatar": data.avatar or "",
+            "district": data.district, "village": data.village,
+            "seller_id": None, "created_at": now_iso()}
+    if data.role == "seller":
+        seller_id = f"seller-user-{user['id'][:8]}"
+        seller = {
+            "id": seller_id, "name": data.name, "avatar": data.avatar or "",
+            "village": data.village or "গ্রাম", "district": data.district or "ঢাকা",
+            "banner": "https://images.unsplash.com/photo-1728895604559-a4e16081504e?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+            "completed_orders": 0, "rating": 5.0, "avg_delivery": "নতুন", "verified": False,
+            "tags": [], "user_phone": data.phone,
+        }
+        await db.sellers.insert_one(dict(seller))
+        user["seller_id"] = seller_id
+    await db.users.insert_one(dict(user))
+    user.pop("_id", None)
+    return user
+
+
 @api_router.post("/auth/login")
-async def login(data: LoginInput):
+async def login(data: AuthInput):
     user = await db.users.find_one({"phone": data.phone}, {"_id": 0})
     if not user:
-        user = {"id": new_id(), "name": data.name, "phone": data.phone, "role": data.role,
-                "wallet": 0, "banned": False, "flagged": False,
-                "district": data.district, "village": data.village,
-                "seller_id": None, "created_at": now_iso()}
-        if data.role == "seller":
-            seller_id = f"seller-user-{user['id'][:8]}"
-            seller = {
-                "id": seller_id, "name": data.name,
-                "avatar": "https://images.unsplash.com/photo-1740477138822-906f6b845579?crop=entropy&cs=srgb&fm=jpg&q=85&w=200",
-                "village": data.village or "গ্রাম", "district": data.district or "ঢাকা",
-                "banner": "https://images.unsplash.com/photo-1728895604559-a4e16081504e?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
-                "completed_orders": 0, "rating": 5.0, "avg_delivery": "নতুন", "verified": False,
-                "tags": [], "user_phone": data.phone,
-            }
-            await db.sellers.insert_one(dict(seller))
-            user["seller_id"] = seller_id
-        await db.users.insert_one(dict(user))
-        user.pop("_id", None)
+        raise HTTPException(status_code=404, detail="এই নম্বরে কোনো অ্যাকাউন্ট নেই। অনুগ্রহ করে রেজিস্ট্রেশন করুন।")
     if user.get("banned"):
         raise HTTPException(status_code=403, detail="আপনার অ্যাকাউন্টটি স্থগিত করা হয়েছে।")
+    return user
+
+
+@api_router.put("/profile")
+async def update_profile(data: ProfileInput):
+    update = {k: v for k, v in data.model_dump().items() if v is not None and k != "phone"}
+    if not update:
+        raise HTTPException(status_code=400, detail="আপডেট করার কিছু নেই")
+    res = await db.users.update_one({"phone": data.phone}, {"$set": update})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="ব্যবহারকারী পাওয়া যায়নি")
+    user = await db.users.find_one({"phone": data.phone}, {"_id": 0})
+    if user.get("seller_id"):
+        s_update = {k: v for k, v in update.items() if k in ("name", "avatar", "district", "village")}
+        if s_update:
+            await db.sellers.update_one({"id": user["seller_id"]}, {"$set": s_update})
     return user
 
 
@@ -370,14 +419,16 @@ async def create_reel(data: ReelInput):
     if not seller:
         raise HTTPException(status_code=404, detail="বিক্রেতা পাওয়া যায়নি")
     cat = await db.categories.find_one({"name": data.category}, {"_id": 0})
+    video_url = data.video_url or DEFAULT_VIDEOS[0]
+    poster = data.poster or yt_thumb(video_url) or (cat.get("image") if cat else None)
     reel = {
         "id": new_id(), "seller_id": data.seller_id, "product_title": data.product_title,
         "category": data.category, "product_type": data.product_type, "price": data.price,
         "price_unit": data.price_unit, "description": data.description,
         "district": data.district or seller.get("district"),
         "village": data.village or seller.get("village"),
-        "poster": data.poster or (cat.get("image") if cat else None),
-        "video_url": data.video_url or DEFAULT_VIDEOS[0],
+        "poster": poster,
+        "video_url": video_url,
         "likes": 0, "liked_by": [], "status": "approved", "reported": False, "created_at": now_iso(),
     }
     await db.reels.insert_one(dict(reel))
@@ -410,6 +461,30 @@ async def wallet_deposit(data: DepositInput):
 @api_router.get("/wallet/deposits")
 async def wallet_deposits(phone: str):
     return await db.deposits.find({"phone": phone}, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+
+@api_router.post("/wallet/withdraw")
+async def wallet_withdraw(data: WithdrawInput):
+    user = await db.users.find_one({"phone": data.phone}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="ব্যবহারকারী পাওয়া যায়নি")
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="সঠিক পরিমাণ লিখুন")
+    if (user.get("wallet", 0) or 0) < data.amount:
+        raise HTTPException(status_code=400, detail="ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই")
+    withdraw = {
+        "id": new_id(), "phone": data.phone, "user_name": data.user_name,
+        "method": data.method, "number": data.number, "amount": data.amount,
+        "status": "pending", "created_at": now_iso(),
+    }
+    await db.withdrawals.insert_one(dict(withdraw))
+    withdraw.pop("_id", None)
+    return withdraw
+
+
+@api_router.get("/wallet/withdrawals")
+async def wallet_withdrawals(phone: str):
+    return await db.withdrawals.find({"phone": phone}, {"_id": 0}).sort("created_at", -1).to_list(200)
 
 
 @api_router.post("/orders")
@@ -484,11 +559,13 @@ async def admin_metrics():
     reported_reels = await db.reels.count_documents({"reported": True})
     reported_comments = await db.comments.count_documents({"reported": True})
     pending_deposits = await db.deposits.count_documents({"status": "pending"})
+    pending_withdrawals = await db.withdrawals.count_documents({"status": "pending"})
     return {
         "total_users": users, "total_sellers": sellers, "gmv": gmv,
         "total_orders": len(orders), "pending_escrow": pending_escrow,
         "pending_videos": pending_videos, "reported_reels": reported_reels,
         "reported_comments": reported_comments, "pending_deposits": pending_deposits,
+        "pending_withdrawals": pending_withdrawals,
     }
 
 
@@ -506,8 +583,33 @@ async def deposit_action(deposit_id: str, body: dict):
     if action == "approve" and deposit["status"] == "pending":
         await db.deposits.update_one({"id": deposit_id}, {"$set": {"status": "approved"}})
         await db.users.update_one({"phone": deposit["phone"]}, {"$inc": {"wallet": deposit["amount"]}})
-    elif action == "reject":
+    elif action == "reject" and deposit["status"] == "pending":
         await db.deposits.update_one({"id": deposit_id}, {"$set": {"status": "rejected"}})
+    return {"ok": True}
+
+
+@api_router.get("/admin/withdrawals")
+async def admin_withdrawals():
+    return await db.withdrawals.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+
+
+@api_router.post("/admin/withdrawals/{withdraw_id}/action")
+async def withdraw_action(withdraw_id: str, body: dict):
+    action = body.get("action")
+    w = await db.withdrawals.find_one({"id": withdraw_id}, {"_id": 0})
+    if not w:
+        raise HTTPException(status_code=404, detail="অনুরোধ পাওয়া যায়নি")
+    if w["status"] != "pending":
+        return {"ok": True}
+    if action == "approve":
+        user = await db.users.find_one({"phone": w["phone"]}, {"_id": 0})
+        if (user.get("wallet", 0) or 0) < w["amount"]:
+            await db.withdrawals.update_one({"id": withdraw_id}, {"$set": {"status": "rejected", "note": "অপর্যাপ্ত ব্যালেন্স"}})
+            raise HTTPException(status_code=400, detail="ব্যবহারকারীর ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই")
+        await db.withdrawals.update_one({"id": withdraw_id}, {"$set": {"status": "approved"}})
+        await db.users.update_one({"phone": w["phone"]}, {"$inc": {"wallet": -w["amount"]}})
+    elif action == "reject":
+        await db.withdrawals.update_one({"id": withdraw_id}, {"$set": {"status": "rejected"}})
     return {"ok": True}
 
 

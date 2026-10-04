@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { apiGet, apiPost } from "../lib/api";
+import { apiGet, apiPost, apiPut } from "../lib/api";
 import { toast } from "sonner";
 
 const AppContext = createContext(null);
@@ -34,11 +34,27 @@ export function AppProvider({ children }) {
 
   useEffect(() => localStorage.setItem("gg_cart", JSON.stringify(cart)), [cart]);
 
-  const login = async (name, phone, role = "buyer", district = "", village = "") => {
-    const u = await apiPost("/auth/login", { name, phone, role, district, village });
+  const login = async (phone) => {
+    const u = await apiPost("/auth/login", { phone });
     setUser(u);
     localStorage.setItem("gg_user", JSON.stringify(u));
     toast.success(`স্বাগতম, ${u.name}!`);
+    return u;
+  };
+
+  const register = async (payload) => {
+    const u = await apiPost("/auth/register", payload);
+    setUser(u);
+    localStorage.setItem("gg_user", JSON.stringify(u));
+    toast.success(`রেজিস্ট্রেশন সফল! স্বাগতম, ${u.name}!`);
+    return u;
+  };
+
+  const updateProfile = async (payload) => {
+    const u = await apiPut("/profile", { phone: user.phone, ...payload });
+    setUser(u);
+    localStorage.setItem("gg_user", JSON.stringify(u));
+    toast.success("প্রোফাইল আপডেট হয়েছে!");
     return u;
   };
 
@@ -72,7 +88,7 @@ export function AppProvider({ children }) {
   const clearCart = () => setCart([]);
 
   const value = {
-    user, setUser, login, logout, refreshUser,
+    user, setUser, login, register, updateProfile, logout, refreshUser,
     cart, addToCart, removeFromCart, updateQty, clearCart,
     reels, loadReels, setReels,
     categories, settings, setSettings,

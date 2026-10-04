@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Heart, MessageCircle, Share2, MapPin, Play, Pause, Volume2, VolumeX, ShieldCheck, Flag, ShoppingBag } from "lucide-react";
-import { bn, taka, apiPost } from "../lib/api";
+import { Heart, MessageCircle, Share2, MapPin, Play, Volume2, VolumeX, ShieldCheck, Flag, ShoppingBag } from "lucide-react";
+import { bn, taka, apiPost, parseVideo } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import { toast } from "sonner";
 
@@ -13,6 +13,8 @@ export default function VideoReel({ reel, isActive, muted, onToggleMute, onOpenC
   const [showBigHeart, setShowBigHeart] = useState(false);
   const seller = reel.seller || {};
   const perishable = reel.product_type === "perishable";
+  const vid = parseVideo(reel.video_url);
+  const isEmbed = vid.type !== "file";
 
   useEffect(() => {
     const v = videoRef.current;
@@ -57,22 +59,41 @@ export default function VideoReel({ reel, isActive, muted, onToggleMute, onOpenC
 
   return (
     <div className="h-full w-full relative flex flex-col justify-end bg-black overflow-hidden" data-testid={`reel-${reel.id}`}>
-      <video
-        ref={videoRef}
-        src={reel.video_url}
-        poster={reel.poster}
-        loop muted={muted} playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        onClick={togglePlay}
-        onDoubleClick={() => doLike(true)}
-      />
+      {isEmbed ? (
+        <>
+          {reel.poster && <img src={reel.poster} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />}
+          {isActive ? (
+            <iframe
+              key={reel.id}
+              src={vid.embed}
+              title={reel.product_title}
+              className="absolute inset-0 w-full h-full"
+              style={{ border: 0, pointerEvents: "none" }}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <img src={reel.poster} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          )}
+        </>
+      ) : (
+        <video
+          ref={videoRef}
+          src={vid.embed}
+          poster={reel.poster}
+          loop muted={muted} playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          onClick={togglePlay}
+          onDoubleClick={() => doLike(true)}
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
 
       {showBigHeart && (
         <Heart className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 text-white fill-rose-500 animate-heart-pop pointer-events-none z-20" />
       )}
 
-      {!playing && (
+      {!playing && !isEmbed && (
         <button onClick={togglePlay} data-testid="video-play-pause-btn"
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-black/40 rounded-full p-5 backdrop-blur-sm">
           <Play className="w-10 h-10 text-white fill-white" />
@@ -93,7 +114,11 @@ export default function VideoReel({ reel, isActive, muted, onToggleMute, onOpenC
       {/* right action bar */}
       <div className="absolute right-3 bottom-36 flex flex-col items-center gap-5 z-20">
         <button onClick={() => onOpenSeller(seller.id)} data-testid={`seller-avatar-${reel.id}`} className="relative">
-          <img src={seller.avatar} alt={seller.name} className="w-12 h-12 rounded-full border-2 border-white object-cover" />
+          {seller.avatar ? (
+            <img src={seller.avatar} alt={seller.name} className="w-12 h-12 rounded-full border-2 border-white object-cover" />
+          ) : (
+            <span className="w-12 h-12 rounded-full border-2 border-white bg-brand-green text-white flex items-center justify-center font-bold text-lg">{seller.name?.[0] || "?"}</span>
+          )}
           <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-amber-500 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold">+</span>
         </button>
         <button onClick={() => doLike(false)} data-testid="video-like-btn" className="flex flex-col items-center gap-1">

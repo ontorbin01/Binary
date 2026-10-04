@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { LogOut, Package, ShieldCheck, Clock, Truck } from "lucide-react";
+import { LogOut, Package, ShieldCheck, Clock, Truck, Pencil } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { apiGet, bn, taka } from "../lib/api";
 import WalletDeposit from "./WalletDeposit";
 import SellerDashboard from "./SellerDashboard";
+import EditProfileModal from "./EditProfileModal";
 
 export default function ProfileView({ onLogin, onLegal }) {
   const { user, logout } = useApp();
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("orders");
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     if (user && user.role !== "seller") apiGet("/orders", { phone: user.phone }).then(setOrders);
@@ -33,7 +35,11 @@ export default function ProfileView({ onLogin, onLegal }) {
     <div className="h-full overflow-y-auto scrollbar-none bg-brand-cream pb-28">
       <div className="bg-gradient-to-br from-brand-green to-emerald-800 p-6 text-white">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-2xl font-bold text-slate-950">{user.name[0]}</div>
+          {user.avatar ? (
+            <img src={user.avatar} alt={user.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400" />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-2xl font-bold text-slate-950">{user.name[0]}</div>
+          )}
           <div className="flex-1">
             <div className="flex items-center gap-1.5">
               <h2 className="text-xl font-bold">{user.name}</h2>
@@ -41,6 +47,7 @@ export default function ProfileView({ onLogin, onLegal }) {
             </div>
             <p className="text-emerald-100 text-sm">{user.phone}</p>
           </div>
+          <button onClick={() => setEditOpen(true)} data-testid="buyer-edit-profile-btn" className="bg-white/20 rounded-full p-2"><Pencil className="w-5 h-5" /></button>
           <button onClick={logout} data-testid="logout-btn" className="bg-white/20 rounded-full p-2"><LogOut className="w-5 h-5" /></button>
         </div>
       </div>
@@ -86,6 +93,7 @@ export default function ProfileView({ onLogin, onLegal }) {
         {tab === "wallet" && <WalletDeposit />}
         <button onClick={onLegal} data-testid="profile-legal-btn" className="w-full mt-5 text-sm text-slate-500 underline">গোপনীয়তা নীতি ও এসক্রো শর্তাবলী</button>
       </div>
+      {editOpen && <EditProfileModal onClose={() => setEditOpen(false)} />}
     </div>
   );
 }

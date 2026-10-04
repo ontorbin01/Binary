@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { LogOut, Upload, Package, Truck, Plus, MapPin, ShieldCheck, Clock, Star } from "lucide-react";
+import { LogOut, Upload, Package, Truck, Plus, MapPin, ShieldCheck, Clock, Star, Pencil } from "lucide-react";
 import { apiGet, apiPost, bn, taka } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import WalletDeposit from "./WalletDeposit";
+import WithdrawForm from "./WithdrawForm";
+import EditProfileModal from "./EditProfileModal";
 import { toast } from "sonner";
 
 export default function SellerDashboard() {
   const { user, logout, categories, loadReels } = useApp();
   const [tab, setTab] = useState("upload");
+  const [walletTab, setWalletTab] = useState("deposit");
   const [seller, setSeller] = useState(null);
   const [myReels, setMyReels] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [editOpen, setEditOpen] = useState(false);
 
   const load = () => {
     if (!user?.seller_id) return;
@@ -24,7 +28,11 @@ export default function SellerDashboard() {
     <div className="h-full overflow-y-auto scrollbar-none bg-brand-cream pb-28">
       <div className="bg-gradient-to-br from-brand-greenDark to-emerald-800 p-5 text-white">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center text-xl font-bold text-slate-950">{user.name[0]}</div>
+          {user.avatar ? (
+            <img src={user.avatar} alt={user.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400" />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center text-xl font-bold text-slate-950">{user.name[0]}</div>
+          )}
           <div className="flex-1">
             <div className="flex items-center gap-1.5">
               <h2 className="text-lg font-bold">{user.name}</h2>
@@ -32,6 +40,7 @@ export default function SellerDashboard() {
             </div>
             <p className="text-emerald-100 text-sm flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {user.village}, {user.district}</p>
           </div>
+          <button onClick={() => setEditOpen(true)} data-testid="seller-edit-profile-btn" className="bg-white/20 rounded-full p-2"><Pencil className="w-5 h-5" /></button>
           <button onClick={logout} data-testid="seller-logout-btn" className="bg-white/20 rounded-full p-2"><LogOut className="w-5 h-5" /></button>
         </div>
         <div className="grid grid-cols-3 gap-2 mt-4">
@@ -54,8 +63,20 @@ export default function SellerDashboard() {
         {tab === "upload" && <UploadForm user={user} categories={categories} onDone={() => { load(); loadReels(); setTab("inventory"); }} />}
         {tab === "inventory" && <Inventory reels={myReels} />}
         {tab === "orders" && <Orders orders={orders} />}
-        {tab === "wallet" && <WalletDeposit />}
+        {tab === "wallet" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-1 bg-slate-200/70 rounded-full p-1">
+              <button onClick={() => setWalletTab("deposit")} data-testid="wallet-subtab-deposit"
+                className={`py-2 rounded-full text-sm font-semibold ${walletTab === "deposit" ? "bg-white text-brand-green shadow" : "text-slate-500"}`}>টাকা যোগ করুন</button>
+              <button onClick={() => setWalletTab("withdraw")} data-testid="wallet-subtab-withdraw"
+                className={`py-2 rounded-full text-sm font-semibold ${walletTab === "withdraw" ? "bg-white text-brand-green shadow" : "text-slate-500"}`}>টাকা তুলুন</button>
+            </div>
+            {walletTab === "deposit" ? <WalletDeposit /> : <WithdrawForm />}
+          </div>
+        )}
       </div>
+
+      {editOpen && <EditProfileModal onClose={() => setEditOpen(false)} />}
     </div>
   );
 }

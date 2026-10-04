@@ -32,7 +32,11 @@ export default function SellerProfileModal({ sellerId, onClose, onOrder }) {
             </div>
             <div className="px-5 pb-6 -mt-10 relative">
               <div className="flex items-end gap-3">
-                <img src={seller.avatar} alt={seller.name} className="w-20 h-20 rounded-2xl border-4 border-brand-cream object-cover" />
+                {seller.avatar ? (
+                  <img src={seller.avatar} alt={seller.name} className="w-20 h-20 rounded-2xl border-4 border-brand-cream object-cover" />
+                ) : (
+                  <span className="w-20 h-20 rounded-2xl border-4 border-brand-cream bg-brand-green text-white flex items-center justify-center font-bold text-3xl">{seller.name?.[0] || "?"}</span>
+                )}
                 <div className="pb-1">
                   <div className="flex items-center gap-1.5">
                     <h2 className="text-xl font-bold text-slate-900">{seller.name}</h2>
