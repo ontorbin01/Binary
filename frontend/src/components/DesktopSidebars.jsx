@@ -47,7 +47,7 @@ function NavBtn({ active, onClick, label }) {
   );
 }
 
-export function RightSidebar({ onAdmin }) {
+export function RightSidebar() {
   const [metrics, setMetrics] = useState(null);
   useEffect(() => { apiGet("/admin/metrics").then(setMetrics).catch(() => {}); }, []);
   return (
@@ -65,14 +65,6 @@ export function RightSidebar({ onAdmin }) {
         <p className="font-bold">এসক্রো সুরক্ষা</p>
         <p className="text-sm text-emerald-100 mt-1">পণ্য বুঝে পাওয়ার পর বিক্রেতা টাকা পান। ১০০% নিরাপদ কেনাকাটা।</p>
       </div>
-      <button onClick={onAdmin} data-testid="admin-dashboard-link"
-        className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 backdrop-blur-md text-left flex items-center gap-3 hover:border-amber-500/50 transition-colors">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center"><Sliders className="w-5 h-5 text-amber-400" /></div>
-        <div>
-          <p className="text-white font-semibold text-sm">সুপার অ্যাডমিন</p>
-          <p className="text-slate-400 text-xs">ড্যাশবোর্ড ও মডারেশন</p>
-        </div>
-      </button>
     </aside>
   );
 }

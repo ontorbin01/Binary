@@ -3,7 +3,7 @@ import { TrendingUp, Users, ShieldCheck, Play, Sliders, ArrowRight } from "lucid
 import { apiGet, bn, taka } from "../lib/api";
 import { useApp } from "../context/AppContext";
 
-export default function HomeView({ onAdmin }) {
+export default function HomeView() {
   const { setView, categories, reels, setActiveCategory, loadReels } = useApp();
   const [m, setM] = useState(null);
   useEffect(() => { apiGet("/admin/metrics").then(setM).catch(() => {}); }, []);
@@ -62,11 +62,10 @@ export default function HomeView({ onAdmin }) {
       </div>
 
       <div className="px-4 mt-6">
-        <button onClick={onAdmin} data-testid="home-admin-btn" className="w-full bg-slate-900 text-white rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center"><Sliders className="w-5 h-5 text-amber-400" /></div>
-          <div className="text-left flex-1"><p className="font-semibold text-sm">সুপার অ্যাডমিন প্যানেল</p><p className="text-slate-400 text-xs">পরিসংখ্যান, মডারেশন ও সেটিংস</p></div>
-          <ArrowRight className="w-5 h-5 text-slate-400" />
-        </button>
+        <div className="bg-gradient-to-br from-emerald-700 to-brand-green rounded-2xl p-4 text-white flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><ShieldCheck className="w-5 h-5 text-amber-300" /></div>
+          <div className="text-left flex-1"><p className="font-semibold text-sm">এসক্রো সুরক্ষিত কেনাকাটা</p><p className="text-emerald-100 text-xs">পণ্য বুঝে পাওয়ার পর বিক্রেতা টাকা পান — ১০০% নিরাপদ</p></div>
+        </div>
       </div>
     </div>
   );

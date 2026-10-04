@@ -34,11 +34,19 @@ export function AppProvider({ children }) {
 
   useEffect(() => localStorage.setItem("gg_cart", JSON.stringify(cart)), [cart]);
 
-  const login = async (name, phone) => {
-    const u = await apiPost("/auth/login", { name, phone, role: "buyer" });
+  const login = async (name, phone, role = "buyer", district = "", village = "") => {
+    const u = await apiPost("/auth/login", { name, phone, role, district, village });
     setUser(u);
     localStorage.setItem("gg_user", JSON.stringify(u));
     toast.success(`স্বাগতম, ${u.name}!`);
+    return u;
+  };
+
+  const refreshUser = async () => {
+    if (!user) return;
+    const u = await apiGet(`/users/${user.phone}`);
+    setUser(u);
+    localStorage.setItem("gg_user", JSON.stringify(u));
     return u;
   };
 
@@ -64,7 +72,7 @@ export function AppProvider({ children }) {
   const clearCart = () => setCart([]);
 
   const value = {
-    user, setUser, login, logout,
+    user, setUser, login, logout, refreshUser,
     cart, addToCart, removeFromCart, updateQty, clearCart,
     reels, loadReels, setReels,
     categories, settings, setSettings,

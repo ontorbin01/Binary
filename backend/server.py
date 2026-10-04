@@ -38,6 +38,31 @@ class LoginInput(BaseModel):
     name: str
     phone: str
     role: str = "buyer"
+    district: Optional[str] = ""
+    village: Optional[str] = ""
+
+
+class ReelInput(BaseModel):
+    seller_id: str
+    product_title: str
+    category: str
+    product_type: str = "non_perishable"  # perishable | non_perishable
+    price: float
+    price_unit: str = "কেজি"
+    description: str = ""
+    district: Optional[str] = ""
+    village: Optional[str] = ""
+    poster: Optional[str] = None
+    video_url: Optional[str] = None
+
+
+class DepositInput(BaseModel):
+    phone: str
+    user_name: str
+    method: str  # bkash | nagad | rocket
+    amount: float
+    trxid: str
+    sender_number: str
 
 
 class CommentInput(BaseModel):
@@ -230,11 +255,33 @@ async def login(data: LoginInput):
     user = await db.users.find_one({"phone": data.phone}, {"_id": 0})
     if not user:
         user = {"id": new_id(), "name": data.name, "phone": data.phone, "role": data.role,
-                "wallet": 0, "banned": False, "flagged": False, "created_at": now_iso()}
+                "wallet": 0, "banned": False, "flagged": False,
+                "district": data.district, "village": data.village,
+                "seller_id": None, "created_at": now_iso()}
+        if data.role == "seller":
+            seller_id = f"seller-user-{user['id'][:8]}"
+            seller = {
+                "id": seller_id, "name": data.name,
+                "avatar": "https://images.unsplash.com/photo-1740477138822-906f6b845579?crop=entropy&cs=srgb&fm=jpg&q=85&w=200",
+                "village": data.village or "গ্রাম", "district": data.district or "ঢাকা",
+                "banner": "https://images.unsplash.com/photo-1728895604559-a4e16081504e?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+                "completed_orders": 0, "rating": 5.0, "avg_delivery": "নতুন", "verified": False,
+                "tags": [], "user_phone": data.phone,
+            }
+            await db.sellers.insert_one(dict(seller))
+            user["seller_id"] = seller_id
         await db.users.insert_one(dict(user))
         user.pop("_id", None)
     if user.get("banned"):
         raise HTTPException(status_code=403, detail="আপনার অ্যাকাউন্টটি স্থগিত করা হয়েছে।")
+    return user
+
+
+@api_router.get("/users/{phone}")
+async def get_user(phone: str):
+    user = await db.users.find_one({"phone": phone}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="ব্যবহারকারী পাওয়া যায়নি")
     return user
 
 
@@ -310,6 +357,61 @@ async def get_categories():
     return await db.categories.find({}, {"_id": 0}).to_list(100)
 
 
+DEFAULT_VIDEOS = [
+    "https://assets.mixkit.co/videos/preview/mixkit-farmer-hands-holding-fresh-produce-41584-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-fresh-vegetables-in-a-field-41583-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-person-picking-fresh-apples-41586-large.mp4",
+]
+
+
+@api_router.post("/reels")
+async def create_reel(data: ReelInput):
+    seller = await db.sellers.find_one({"id": data.seller_id}, {"_id": 0})
+    if not seller:
+        raise HTTPException(status_code=404, detail="বিক্রেতা পাওয়া যায়নি")
+    cat = await db.categories.find_one({"name": data.category}, {"_id": 0})
+    reel = {
+        "id": new_id(), "seller_id": data.seller_id, "product_title": data.product_title,
+        "category": data.category, "product_type": data.product_type, "price": data.price,
+        "price_unit": data.price_unit, "description": data.description,
+        "district": data.district or seller.get("district"),
+        "village": data.village or seller.get("village"),
+        "poster": data.poster or (cat.get("image") if cat else None),
+        "video_url": data.video_url or DEFAULT_VIDEOS[0],
+        "likes": 0, "liked_by": [], "status": "approved", "reported": False, "created_at": now_iso(),
+    }
+    await db.reels.insert_one(dict(reel))
+    reel.pop("_id", None)
+    return reel
+
+
+@api_router.get("/seller/{seller_id}/reels")
+async def seller_reels(seller_id: str):
+    return await db.reels.find({"seller_id": seller_id, "status": {"$ne": "removed"}}, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+
+@api_router.get("/seller/{seller_id}/orders")
+async def seller_orders(seller_id: str):
+    return await db.orders.find({"seller_id": seller_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+
+@api_router.post("/wallet/deposit")
+async def wallet_deposit(data: DepositInput):
+    deposit = {
+        "id": new_id(), "phone": data.phone, "user_name": data.user_name,
+        "method": data.method, "amount": data.amount, "trxid": data.trxid,
+        "sender_number": data.sender_number, "status": "pending", "created_at": now_iso(),
+    }
+    await db.deposits.insert_one(dict(deposit))
+    deposit.pop("_id", None)
+    return deposit
+
+
+@api_router.get("/wallet/deposits")
+async def wallet_deposits(phone: str):
+    return await db.deposits.find({"phone": phone}, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+
 @api_router.post("/orders")
 async def create_order(data: OrderInput):
     reel = await db.reels.find_one({"id": data.reel_id}, {"_id": 0})
@@ -381,12 +483,32 @@ async def admin_metrics():
     pending_videos = await db.reels.count_documents({"status": "pending"})
     reported_reels = await db.reels.count_documents({"reported": True})
     reported_comments = await db.comments.count_documents({"reported": True})
+    pending_deposits = await db.deposits.count_documents({"status": "pending"})
     return {
         "total_users": users, "total_sellers": sellers, "gmv": gmv,
         "total_orders": len(orders), "pending_escrow": pending_escrow,
         "pending_videos": pending_videos, "reported_reels": reported_reels,
-        "reported_comments": reported_comments,
+        "reported_comments": reported_comments, "pending_deposits": pending_deposits,
     }
+
+
+@api_router.get("/admin/deposits")
+async def admin_deposits():
+    return await db.deposits.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+
+
+@api_router.post("/admin/deposits/{deposit_id}/action")
+async def deposit_action(deposit_id: str, body: dict):
+    action = body.get("action")
+    deposit = await db.deposits.find_one({"id": deposit_id}, {"_id": 0})
+    if not deposit:
+        raise HTTPException(status_code=404, detail="ডিপোজিট পাওয়া যায়নি")
+    if action == "approve" and deposit["status"] == "pending":
+        await db.deposits.update_one({"id": deposit_id}, {"$set": {"status": "approved"}})
+        await db.users.update_one({"phone": deposit["phone"]}, {"$inc": {"wallet": deposit["amount"]}})
+    elif action == "reject":
+        await db.deposits.update_one({"id": deposit_id}, {"$set": {"status": "rejected"}})
+    return {"ok": True}
 
 
 @api_router.put("/admin/settings")

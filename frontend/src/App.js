@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "@/App.css";
 import { Toaster } from "sonner";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AppProvider, useApp } from "@/context/AppContext";
 import HomeView from "@/components/HomeView";
 import ReelsFeed from "@/components/ReelsFeed";
@@ -21,7 +22,7 @@ function Screen({ modals }) {
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
       <div className="h-full w-full">
-        {view === "home" && <HomeView onAdmin={() => modals.setShowAdmin(true)} />}
+        {view === "home" && <HomeView />}
         {view === "feed" && (
           <ReelsFeed
             onOpenComments={modals.setCommentReel}
@@ -44,24 +45,17 @@ function Shell() {
   const [orderReel, setOrderReel] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
 
-  const modals = { setCommentReel, setSellerId, setOrderReel, setShowLogin, setShowLegal, setShowAdmin };
+  const modals = { setCommentReel, setSellerId, setOrderReel, setShowLogin, setShowLegal };
 
   return (
-    <div className="min-h-screen bg-brand-cream">
-      {/* Mobile */}
-      <div className="md:hidden h-[100dvh] w-full">
-        <Screen modals={modals} />
-      </div>
-
-      {/* Desktop */}
-      <div className="hidden md:flex min-h-screen bg-slate-900 justify-center items-start gap-6 p-6">
+    <div className="min-h-screen bg-brand-cream md:bg-slate-900">
+      <div className="md:flex md:min-h-screen md:justify-center md:items-start md:gap-6 md:p-6">
         <LeftSidebar onLegal={() => setShowLegal(true)} />
-        <div className="w-full max-w-[420px] h-[88vh] rounded-[2rem] overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.6)] border-[6px] border-slate-800 bg-black shrink-0">
+        <div className="h-[100dvh] w-full bg-black md:h-[88vh] md:w-full md:max-w-[420px] md:rounded-[2rem] md:overflow-hidden md:shadow-[0_0_60px_rgba(0,0,0,0.6)] md:border-[6px] md:border-slate-800 md:shrink-0">
           <Screen modals={modals} />
         </div>
-        <RightSidebar onAdmin={() => setShowAdmin(true)} />
+        <RightSidebar />
       </div>
 
       {/* Modals */}
@@ -70,17 +64,25 @@ function Shell() {
       {orderReel && <OrderModal reel={orderReel} onClose={() => setOrderReel(null)} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
       {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
-      {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
-
-      <Toaster position="top-center" richColors />
     </div>
   );
+}
+
+function AdminPortalPage() {
+  const navigate = useNavigate();
+  return <AdminDashboard onClose={() => navigate("/")} />;
 }
 
 function App() {
   return (
     <AppProvider>
-      <Shell />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Shell />} />
+          <Route path="/admin-secret-portal" element={<AdminPortalPage />} />
+        </Routes>
+        <Toaster position="top-center" richColors />
+      </BrowserRouter>
     </AppProvider>
   );
 }

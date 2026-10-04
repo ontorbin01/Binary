@@ -43,7 +43,7 @@ export default function AdminDashboard({ onClose }) {
       ) : (
         <div className="max-w-4xl mx-auto p-4 pb-20">
           <div className="flex gap-2 overflow-x-auto scrollbar-none mb-5">
-            {[["metrics", "পরিসংখ্যান"], ["gateway", "গেটওয়ে"], ["commission", "কমিশন"], ["moderation", "মডারেশন"], ["users", "ব্যবহারকারী"]].map(([id, label]) => (
+            {[["metrics", "পরিসংখ্যান"], ["gateway", "গেটওয়ে"], ["commission", "কমিশন"], ["deposits", "ডিপোজিট"], ["moderation", "মডারেশন"], ["users", "ব্যবহারকারী"]].map(([id, label]) => (
               <button key={id} onClick={() => setTab(id)} data-testid={`admin-tab-${id}`}
                 className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold ${tab === id ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-300"}`}>
                 {label}
@@ -53,6 +53,7 @@ export default function AdminDashboard({ onClose }) {
           {tab === "metrics" && <Metrics />}
           {tab === "gateway" && <Gateway settings={settings} setSettings={setSettings} />}
           {tab === "commission" && <Commission settings={settings} setSettings={setSettings} />}
+          {tab === "deposits" && <Deposits />}
           {tab === "moderation" && <Moderation />}
           {tab === "users" && <UsersTab />}
         </div>
@@ -217,6 +218,35 @@ function UsersTab() {
           <button onClick={() => action(u.id, "flag")} data-testid={`user-flag-${u.id}`} className="text-amber-400 p-2"><Flag className="w-4 h-4" /></button>
           <button onClick={() => action(u.id, u.banned ? "unban" : "ban")} data-testid={`user-ban-${u.id}`} className="text-rose-400 p-2"><Ban className="w-4 h-4" /></button>
           <button onClick={() => action(u.id, "delete")} data-testid={`user-delete-${u.id}`} className="text-slate-400 p-2"><Trash2 className="w-4 h-4" /></button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+function Deposits() {
+  const [deposits, setDeposits] = useState([]);
+  const load = () => { apiGet("/admin/deposits").then(setDeposits); };
+  useEffect(() => { load(); }, []);
+  const action = async (id, a) => { await apiPost(`/admin/deposits/${id}/action`, { action: a }); toast.success(a === "approve" ? "অনুমোদিত ও ব্যালেন্স যোগ হয়েছে" : "বাতিল করা হয়েছে"); load(); };
+  const badge = (s) => s === "approved" ? "bg-emerald-600" : s === "rejected" ? "bg-rose-600" : "bg-amber-600";
+  return (
+    <div className="space-y-2">
+      <h3 className="text-white font-bold mb-3">ওয়ালেট ডিপোজিট যাচাই</h3>
+      {deposits.length === 0 && <p className="text-slate-500 text-sm">কোনো ডিপোজিট অনুরোধ নেই</p>}
+      {deposits.map((d) => (
+        <div key={d.id} className="bg-slate-800 rounded-2xl p-3 flex items-center gap-3" data-testid={`admin-deposit-${d.id}`}>
+          <div className="flex-1">
+            <p className="text-white text-sm font-semibold">{taka(d.amount)} <span className="text-slate-400 text-xs font-normal">· {d.method}</span> <span className={`text-[10px] text-white px-2 py-0.5 rounded-full ${badge(d.status)}`}>{d.status}</span></p>
+            <p className="text-slate-400 text-xs">{d.user_name} · প্রেরক: {d.sender_number} · TrxID: {d.trxid}</p>
+          </div>
+          {d.status === "pending" && (
+            <>
+              <button onClick={() => action(d.id, "approve")} data-testid={`deposit-approve-${d.id}`} className="bg-emerald-600 text-white p-2 rounded-lg"><Check className="w-4 h-4" /></button>
+              <button onClick={() => action(d.id, "reject")} data-testid={`deposit-reject-${d.id}`} className="bg-rose-600 text-white p-2 rounded-lg"><X className="w-4 h-4" /></button>
+            </>
+          )}
         </div>
       ))}
     </div>
