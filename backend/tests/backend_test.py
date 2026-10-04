@@ -51,7 +51,8 @@ class TestReels:
 class TestAuth:
     def test_login_create(self, s):
         phone = f"019{uuid.uuid4().int % 10**8:08d}"
-        r = s.post(f"{API}/auth/login", json={"name": "TEST_Buyer", "phone": phone})
+        # Iteration 3: login no longer auto-creates; use register
+        r = s.post(f"{API}/auth/register", json={"name": "TEST_Buyer", "phone": phone, "role": "buyer"})
         assert r.status_code == 200
         u = r.json()
         assert u["phone"] == phone
@@ -66,7 +67,7 @@ class TestAuth:
     def test_login_banned(self, s):
         # Create a user, ban them, verify 403
         phone = f"018{uuid.uuid4().int % 10**8:08d}"
-        s.post(f"{API}/auth/login", json={"name": "TEST_ToBan", "phone": phone})
+        s.post(f"{API}/auth/register", json={"name": "TEST_ToBan", "phone": phone, "role": "buyer"})
         # fetch id via admin users
         users = s.get(f"{API}/admin/users").json()
         uid = next(u["id"] for u in users if u["phone"] == phone)
@@ -225,7 +226,7 @@ class TestAdmin:
 
     def test_users_lifecycle(self, s):
         phone = f"017{uuid.uuid4().int % 10**8:08d}"
-        s.post(f"{API}/auth/login", json={"name": "TEST_U", "phone": phone})
+        s.post(f"{API}/auth/register", json={"name": "TEST_U", "phone": phone, "role": "buyer"})
         users = s.get(f"{API}/admin/users").json()
         u = next(x for x in users if x["phone"] == phone)
         uid = u["id"]

@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 3 both-track testing complete. Backend: 46/46 pytest cases pass (23 legacy + 11 iteration-2 + 12 new iteration-3). Fixed legacy fixtures (backend_test.py and test_iteration2.py) to use /auth/register instead of /auth/login for new user creation since login no longer auto-creates. New test_iteration3.py covers: login 404 for unregistered phone, register 409 on duplicate phone, seller role creates linked seller_id doc, PUT /profile mirrors name/avatar/district/village to seller, /wallet/withdraw rejects on 0 and insufficient balance, admin approve deducts via $inc, approve w/ insufficient marks rejected and returns 400, reject no-deduct, metrics includes pending_withdrawals, YouTube URL auto-sets img.youtube.com poster. Frontend: validated via Playwright - auth-tab-login/register toggle, login 404 auto-switches to Register tab, register 409 auto-switches to Login tab, session persists in localStorage after reload, buyer wallet shows ONLY deposit (no withdraw-section), seller wallet has deposit+withdraw sub-tabs with WithdrawForm (bkash/nagad/rocket), over-balance withdraw shows error toast ('ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই'), buyer-edit-profile-btn and seller-edit-profile-btn both open edit-profile-modal with name/avatar-url/file/district/village/save fields, YouTube reel upload renders real YouTube iframe (src=youtube.com/embed/.../autoplay=1&mute=1&loop=1) when active in vertical feed with img.youtube.com poster fallback, direct MP4 reels still render <video>, admin /admin-secret-portal (admin/Rumpaontu15@) still works with both Deposits and new Withdrawals tabs; home-admin-btn and admin-dashboard-link both absent on public pages.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration3.py",
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iter3.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Withdraw approve path uses $inc wallet with -amount but has a TOCTOU race: between find_one check and update_one, another approve for a different withdrawal of the same user could pass the balance check twice. For a single admin workflow this is acceptable; for scale use conditional update with filter {'wallet': {'$gte': amount}}.",
+    "AuthInput.name defaults to \"\" but /auth/register validates `if not data.name`. Model allows passing name=\"\" which triggers 400. Fine, but the Pydantic validation layer could enforce min_length=1 to centralize the rule.",
+    "ProfileInput.district/village can be None but code only skips None values. Sending empty string will update to empty string (clearing it). Possibly intentional, but no guard against clearing to empty.",
+    "parseVideo in /app/frontend/src/lib/api.js: current code works for watch?v= and youtu.be, but iframe uses &playlist=<id>&loop=1 only for loop support; works. No support for Facebook video URL on backend thumbnail (OK, falls back to category image).",
+    "server.py `from typing import List` unused (still present) - minor.",
+    "Admin APIs still unauthenticated (same as iteration 2 note). MVP ok."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/test_iteration3.py"
+  ],
+  "success_rate": {"backend": "100% (46/46)", "frontend": "100% on all iteration-3 flows"},
+  "test_credentials": "Admin admin/Rumpaontu15@ at /admin-secret-portal ; seeded buyer phone 01711000001 ; new users via Register (unique phone)",
+  "seed_data_creation": "Tests create TEST_ prefixed users/sellers/reels/deposits/withdrawals via /auth/register (role buyer or seller) and respective endpoints. No cleanup; MVP convention.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests split: backend_test.py (23 legacy regressions, updated to use /auth/register for creation), test_iteration2.py (11 iter-2 features, fixtures updated to /auth/register), test_iteration3.py (12 new iter-3 features). All 46 pass under `pytest -n 2 --dist loadscope` from /app/backend/pytest.ini. New testids verified: auth-tab-login, auth-tab-register, login-phone-input, login-submit-btn, register-phone-input, register-avatar-input, register-submit-btn, buyer-edit-profile-btn, seller-edit-profile-btn, edit-profile-modal, edit-name-input, edit-avatar-url-input, edit-avatar-file-input, edit-avatar-upload-btn, edit-district-select, edit-village-input, edit-profile-save-btn, wallet-subtab-deposit, wallet-subtab-withdraw, withdraw-section, withdraw-method-{bkash,nagad,rocket}, withdraw-number-input, withdraw-amount-input, withdraw-submit-btn, admin-tab-withdrawals, admin-withdraw-{id}, withdraw-approve-{id}, withdraw-reject-{id}. Nav bottom uses nav-{feed|home|categories|cart|profile}-btn.",
+  "rca of the issue": "N/A — no bugs in iteration 3."
+}

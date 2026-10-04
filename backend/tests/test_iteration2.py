@@ -18,7 +18,7 @@ def s():
 @pytest.fixture(scope="module")
 def seller(s):
     phone = f"019{uuid.uuid4().int % 10**8:08d}"
-    r = s.post(f"{API}/auth/login", json={
+    r = s.post(f"{API}/auth/register", json={
         "name": "TEST_Seller", "phone": phone,
         "role": "seller", "district": "বগুড়া", "village": "শেরপুর"
     })
@@ -31,7 +31,7 @@ def seller(s):
 @pytest.fixture(scope="module")
 def buyer(s):
     phone = f"018{uuid.uuid4().int % 10**8:08d}"
-    r = s.post(f"{API}/auth/login", json={"name": "TEST_Buyer2", "phone": phone, "role": "buyer"})
+    r = s.post(f"{API}/auth/register", json={"name": "TEST_Buyer2", "phone": phone, "role": "buyer"})
     assert r.status_code == 200
     u = r.json()
     assert u.get("seller_id") in (None, "", False) or "seller_id" not in u or u["seller_id"] is None
