@@ -1,0 +1,260 @@
+{
+  "project_overview": {
+    "app_name": "GramerGhor BD (গ্রামেরঘর বিডি)",
+    "tagline": "গ্রামের সেরা পণ্য, সরাসরি আপনার দরজায়",
+    "description": "A video-first (Reels/Shorts style) e-commerce marketplace connecting rural producers directly with urban buyers in Bangladesh. Featuring immersive vertical video feeds, escrow payment protection, direct rural seller trust metrics, bKash/Nagad checkout, and a full super admin panel.",
+    "app_type": "mobile_web_app (dual-view responsive, PWA-style video-first marketplace)",
+    "language": "Bangla (১০০% ক্লিন ও আধুনিক বাংলা ইউআই)",
+    "design_archetype": "Organic & Earthy + Kinetic Video E-Commerce Hybrid"
+  },
+  "typography": {
+    "font_family": {
+      "primary": "'Hind Siliguri', 'Kalpurush', -apple-system, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "google_font_import": "@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');",
+    "hierarchy": {
+      "h1": "text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-snug",
+      "h2": "text-xl sm:text-2xl font-semibold text-slate-800 leading-snug",
+      "h3": "text-lg sm:text-xl font-semibold text-slate-800",
+      "body_lg": "text-base font-normal leading-relaxed text-slate-700",
+      "body_md": "text-sm font-normal leading-relaxed text-slate-600",
+      "body_sm": "text-xs font-medium text-slate-500",
+      "price_highlight": "text-xl font-bold text-emerald-700 font-mono"
+    },
+    "bangla_formatting_rules": [
+      "Always set global CSS body { font-family: 'Hind Siliguri', sans-serif; -webkit-font-smoothing: antialiased; }",
+      "Ensure line-height is at least 1.5 or leading-relaxed for Bangla script to prevent text clipping on diacritics (মাত্রাও কার চিহ্ন).",
+      "Use Bengali numerals (০, ১, ২, ৩, ৪, ৫, ৬, ৭, ৮, ৯) or BDT currency symbol (৳) formatted cleanly, e.g., '৳ ৮৫০' instead of 'Tk 850'."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary_green": "#1b4d3e",
+      "primary_green_dark": "#12372c",
+      "primary_green_light": "#2a6f5a",
+      "primary_green_surface": "#f0f7f4",
+      "accent_amber": "#d97706",
+      "accent_amber_hover": "#b45309",
+      "accent_amber_light": "#fef3c7",
+      "mud_rust": "#c2410c",
+      "background_cream": "#fcfbf7",
+      "card_white": "#ffffff",
+      "text_dark": "#0f172a",
+      "text_muted": "#64748b",
+      "border_subtle": "#e2e8f0"
+    },
+    "payment_gateways": {
+      "bkash": "#e2136e",
+      "nagad": "#f7921e",
+      "cod": "#1b4d3e"
+    },
+    "trust_badges": {
+      "verified_green": "#16a34a",
+      "escrow_blue": "#2563eb",
+      "rating_gold": "#f59e0b"
+    },
+    "video_overlay": {
+      "scrim_gradient": "bg-gradient-to-t from-black/90 via-black/40 to-transparent",
+      "glass_card": "bg-slate-900/75 backdrop-blur-md border border-white/20 text-white",
+      "cta_button": "bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shadow-lg shadow-amber-500/30"
+    }
+  },
+  "layout_and_grid": {
+    "dual_view_strategy": {
+      "mobile_view": {
+        "viewport": "< 768px",
+        "container": "w-full h-[100dvh] overflow-hidden bg-black flex flex-col relative",
+        "feed_container": "flex-1 overflow-y-scroll snap-y snap-mandatory scrollbar-none",
+        "video_item": "h-[100dvh] w-full snap-start snap-always relative flex flex-col justify-end",
+        "bottom_nav": "fixed bottom-0 left-0 right-0 h-16 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 z-50 flex items-center justify-around px-2 text-white"
+      },
+      "desktop_view": {
+        "viewport": ">= 768px",
+        "container": "min-h-screen bg-slate-900 text-slate-100 flex justify-center items-center py-6 px-4 gap-6",
+        "left_sidebar": "w-72 hidden lg:flex flex-col gap-4 bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 backdrop-blur-md h-[88vh] sticky top-6 shadow-2xl",
+        "center_feed": "w-full max-w-[420px] h-[88vh] bg-black rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-[6px] border-slate-800 relative flex flex-col",
+        "right_sidebar": "w-80 hidden md:flex flex-col gap-4 bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 backdrop-blur-md h-[88vh] sticky top-6 shadow-2xl overflow-y-auto"
+      }
+    }
+  },
+  "component_patterns": {
+    "video_reel_card": {
+      "description": "Full height vertical video player card with floating interaction overlays and shop CTA.",
+      "elements": {
+        "video_player": "HTML5 <video> with auto-play observer, click-to-toggle play/pause, double-tap heart gesture, sound toggle button top-right.",
+        "top_bar": "Search bar icon, sound mute button, GramerGhor BD branding logo with glowing green dot ('লাইভ').",
+        "right_action_bar": "Vertical floating stack on bottom-right containing: Seller Avatar with green '+' button, Heart/Like button with live count, Comment button with count badge, Share button, Cart badge.",
+        "bottom_product_overlay": "Glassmorphic gradient panel featuring: Seller location tag (e.g. '📍 বগুড়া' or '📍 সুন্দরবন'), Seller trust badge ('১০০% খাঁটি'), Product title in bold Hind Siliguri, Price tag ('৳ ৮৫০ / কেজি'), 'দ্রুত অর্ডার করুন' primary CTA button."
+      }
+    },
+    "order_modal_flow": {
+      "description": "Streamlined 3-step checkout drawer with Escrow and bKash/Nagad integration.",
+      "step_1": "Delivery Information (Name, Mobile Number, District/Division select, Thana, Village/House address in Bangla).",
+      "step_2": "Escrow Payment Selection (ক্যাশ অন ডেলিভারি / বিকাশ / নগদ). Displays GramerGhor Escrow Protection Guarantee ('আপনার টাকা আমাদের কাছে নিরাপদ, পণ্য বুঝে পাওয়ার পর বিক্রেতা পাবেন').",
+      "step_3": "Transaction Submission (Displays official bKash/Nagad merchant number `01700-123456`, copy button, and TrxID input box with live validation).",
+      "cta": "অর্ডার নিশ্চিত করুন (Confirm Order)"
+    },
+    "seller_profile": {
+      "description": "Trust-focused seller storefront modal/page.",
+      "sections": [
+        "Header banner with rural landscape photo and seller profile avatar with green verified badge.",
+        "Trust Badges: '১০০% খাঁটি পণ্য' (100% Pure), 'সরাসরি কৃষক' (Direct Farmer), '২৪-৪৮ ঘণ্টার ডেলিভারি'.",
+        "Metrics Grid: মোট অর্ডার সম্পন্ন (Completed Orders e.g. '৪৫০+'), গড় রেটিং ('৪.৯★'), গড় ডেলিভারি সময় ('১.৫ দিন').",
+        "Hashtag Category Filters: `#সরিষার_তেল`, `#সুন্দরবনের_মধু`, `#গাওয়া_ঘি`, `#হাতে_বোনা_কাঁথা`.",
+        "Grid of seller's product videos and items."
+      ]
+    },
+    "comment_drawer": {
+      "description": "Slide-up sheet for real-time customer discussions and questions.",
+      "features": [
+        "Header showing total comments count.",
+        "Scrollable comment list with user avatars, name, timestamp, Bangla text, and 'রিপোর্ট করুন' (Report to admin) flag button.",
+        "Input bar with emoji picker shortcuts and 'মন্তব্য পাঠান' submit button."
+      ]
+    },
+    "super_admin_dashboard": {
+      "description": "Comprehensive control panel for platform metrics, moderation, and finance.",
+      "sections": [
+        "Live Metric Cards: মোট বিক্রয় (Total GMV e.g. '৳ ৪,৫২,০০০'), মোট বিক্রেতা (Active Sellers), পেন্ডিং এসক্রো টাকা (Pending Escrow), অনুমোদন অপেক্ষমাণ ভিডিও (Videos Pending Approval).",
+        "Commission Controller: Interactive slider to adjust platform commission percentage (0% to 15%, e.g. 'বর্তমান কমিশন: ৫%').",
+        "Gateway Manager: Toggles for bKash, Nagad, and Cash on Delivery with status indicators.",
+        "Video Moderation Queue: Table showing video preview, seller name, product title, and action buttons ('অনুমোদন দিন' / 'বাতিল করুন').",
+        "User & Seller Management: Ban/Verify toggle and report investigation modal."
+      ]
+    },
+    "bangla_legal_pages": {
+      "description": "Bangla privacy policy and escrow rules modal or full footer view.",
+      "content": "বিস্তারিত গোপনীয়তা নীতি (Privacy Policy) এবং গ্রামেরঘর ট্রাস্ট এসক্রো সুরক্ষার নিয়মাবলী."
+    }
+  },
+  "motion_and_interactions": {
+    "scroll_snap": "CSS scroll-snap-type: y mandatory with smooth CSS momentum scrolling.",
+    "like_animation": "Heart pop-up bounce effect on tap using CSS scale transition (`transform scale-125 transition-transform duration-200`).",
+    "drawer_transition": "Framer motion or Tailwind slide-in-from-bottom (`animate-in slide-in-from-bottom duration-300`).",
+    "toast_notifications": "Use `sonner` in Bangla, e.g., toast.success('পণ্যটি কার্টে যোগ করা হয়েছে!'), toast.info('TrxID যাচাই করা হচ্ছে...')."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "mapping": {
+      "home": "Home",
+      "reels_feed": "Film / Video",
+      "categories": "Grid / LayoutGrid",
+      "cart": "ShoppingBag",
+      "profile": "User",
+      "heart": "Heart",
+      "comment": "MessageCircle",
+      "share": "Share2",
+      "location": "MapPin",
+      "verified": "CheckCircle2 / ShieldCheck",
+      "truck": "Truck",
+      "play": "Play",
+      "pause": "Pause",
+      "sound_on": "Volume2",
+      "sound_off": "VolumeX",
+      "admin_slider": "Sliders",
+      "report": "AlertTriangle",
+      "copy": "Copy",
+      "close": "X"
+    }
+  },
+  "data_testids": {
+    "rules": "All interactive elements (buttons, nav items, video controls, form inputs, modals, admin toggles) MUST have kebab-case data-testid attributes.",
+    "examples": [
+      "data-testid=\"nav-home-btn\"",
+      "data-testid=\"nav-feed-btn\"",
+      "data-testid=\"nav-categories-btn\"",
+      "data-testid=\"nav-cart-btn\"",
+      "data-testid=\"nav-profile-btn\"",
+      "data-testid=\"video-play-pause-btn\"",
+      "data-testid=\"video-mute-btn\"",
+      "data-testid=\"video-like-btn\"",
+      "data-testid=\"video-comment-btn\"",
+      "data-testid=\"video-share-btn\"",
+      "data-testid=\"order-now-btn\"",
+      "data-testid=\"checkout-modal\"",
+      "data-testid=\"checkout-confirm-btn\"",
+      "data-testid=\"bkash-trxid-input\"",
+      "data-testid=\"nagad-trxid-input\"",
+      "data-testid=\"admin-dashboard-link\"",
+      "data-testid=\"admin-commission-slider\"",
+      "data-testid=\"admin-approve-video-btn\"",
+      "data-testid=\"comment-report-btn\"",
+      "data-testid=\"seller-profile-modal\""
+    ]
+  },
+  "media_and_assets": {
+    "product_images": [
+      {
+        "category": "Organic Honey (সুন্দরবনের প্রাকৃতিক মধু)",
+        "url": "https://images.unsplash.com/photo-1587049352851-8d4e89133924?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Organic pure raw honey jar"
+      },
+      {
+        "category": "Mustard Oil (ঘানি ভাঙা খাঁটি সরিষার তেল)",
+        "url": "https://images.unsplash.com/photo-1471943311424-646960669fbc?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Pure cold pressed mustard oil glass bottle"
+      },
+      {
+        "category": "Rajshahi Mangoes (রাজশাহীর সুস্বাদু আম)",
+        "url": "https://images.unsplash.com/photo-1673010960635-d0d1ad81b90a?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Fresh ripe organic mango"
+      },
+      {
+        "category": "Clay Handicrafts (মাটির তৈরি হস্তশিল্প)",
+        "url": "https://images.unsplash.com/photo-1671167051711-1fcc8ddd7d40?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Traditional Bangladeshi clay pottery items"
+      },
+      {
+        "category": "Rural Farmer / Producer (গ্রামের প্রান্তিক কৃষক)",
+        "url": "https://images.unsplash.com/photo-1610560875826-af5b05a96cfa?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Village farmer harvesting fresh produce"
+      }
+    ],
+    "sample_videos": [
+      {
+        "title": "সুন্দরবনের খাঁটি চাকের মধু আহরণ",
+        "seller": "রফিকুল ইসলাম (সাতক্ষীরা)",
+        "location": "সাতক্ষীরা, সুন্দরবন",
+        "price": "৳ ৯৫০ / কেজি",
+        "url": "https://assets.mixkit.co/videos/preview/mixkit-farmer-hands-holding-fresh-produce-41584-large.mp4"
+      },
+      {
+        "title": "বগুড়ার ঘানি ভাঙা খাঁটি সরিষার তেল",
+        "seller": "আব্দুল করিম (বগুড়া)",
+        "location": "শেরপুর, বগুড়া",
+        "price": "৳ ২৪০ / লিটার",
+        "url": "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-fresh-vegetables-in-a-field-41583-large.mp4"
+      },
+      {
+        "title": "রাজশাহীর প্রিমিয়াম হিমসাগর আম",
+        "seller": "শফিকুল আলম (রাজশাহী)",
+        "location": "বাঘা, রাজশাহী",
+        "price": "৳ ১২০ / কেজি",
+        "url": "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-person-picking-fresh-apples-41586-large.mp4"
+      }
+    ],
+    "payment_logos": {
+      "bkash": "bKash (বিকাশ) Official Pink Accent Badge",
+      "nagad": "Nagad (নগদ) Official Orange Accent Badge",
+      "cod": "Cash On Delivery (ক্যাশ অন ডেলিভারি)"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Import Google Font 'Hind Siliguri' in public/index.html or src/index.css and apply globally to the body element.",
+    "Implement the Dual-View layout: Mobile full-screen snapping reels feed with sticky bottom bar; Desktop centered framed phone canvas with left/right sidebars for desktop users.",
+    "Maintain 100% Bangla language for the user interface text using clean, warm, modern phrasing.",
+    "Build the interactive reel video feed with autoplay, mute/unmute toggle, play/pause tap, like button counter, comment drawer, share modal, and 'দ্রুত অর্ডার করুন' escrow checkout button.",
+    "Build the complete checkout flow modal with Address, Escrow choice (COD/bKash/Nagad), and TrxID submission input.",
+    "Include a Super Admin view toggle in the header or sidebar to manage platform metrics, video approvals, commission slider, and payment gateways.",
+    "Add seller profile views with trust metrics badges, completed order stats, and hashtag categories.",
+    "Add Sonner toast feedback for cart actions, like actions, copy TrxID, and order submissions.",
+    "Ensure every single interactive element has a proper data-testid attribute."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "anti_slop": "Do not build a plain Vercel gray page. Use warm deep forest greens (#1b4d3e), rich mud amber (#d97706), and high-contrast video overlays.",
+    "font": "Use Hind Siliguri for headings and body. Never fallback to default browser serif or generic fonts without Hind Siliguri loaded.",
+    "toast": "Use sonner for notifications in Bangla.",
+    "testids": "Strict adherence to kebab-case role-based data-testid on buttons, inputs, links, modals, and list items."
+  }
+}
