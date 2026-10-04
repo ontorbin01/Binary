@@ -159,7 +159,7 @@ function Moderation() {
     apiGet("/admin/moderation/reels").then(setReels);
     apiGet("/admin/moderation/comments").then(setComments);
   };
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const reelAction = async (id, action) => { await apiPost(`/admin/reels/${id}/action`, { action }); toast.success(action === "remove" ? "ভিডিও সরানো হয়েছে" : "অনুমোদন দেওয়া হয়েছে"); load(); };
   const commentAction = async (id, action) => { await apiPost(`/admin/comments/${id}/action`, { action }); toast.success(action === "remove" ? "মন্তব্য সরানো হয়েছে" : "অনুমোদিত"); load(); };
@@ -201,8 +201,8 @@ function Moderation() {
 
 function UsersTab() {
   const [users, setUsers] = useState([]);
-  const load = () => apiGet("/admin/users").then(setUsers);
-  useEffect(load, []);
+  const load = () => { apiGet("/admin/users").then(setUsers); };
+  useEffect(() => { load(); }, []);
   const action = async (id, a) => { await apiPost(`/admin/users/${id}/action`, { action: a }); toast.success("সম্পন্ন হয়েছে"); load(); };
   return (
     <div className="space-y-2">
